@@ -3,6 +3,7 @@
 * Requirements
 
     Gudhi: conda install -c conda-forge gudhi (Recommended) --or-- pip install gudhi
+    
     POT(Python Optimal Transport): pip install POT
 
 * Usage
