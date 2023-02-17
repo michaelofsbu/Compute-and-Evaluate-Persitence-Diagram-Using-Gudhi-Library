@@ -8,12 +8,13 @@ import gudhi.wasserstein
 from scipy.spatial import distance_matrix
 from utils import __plot_persistence_diagram_
 
-def computePD(X, min_persistence=0, max_dimension=2):
+def computePD(X, min_persistence=0, max_dimension=2, max_edge_length=None):
     '''
     Input
         X - point cloud in NxD, N is number of samples, D is dimension
         min_persistence - only preserve structures that last longer than the minimum persitence 
         max_dimension - the maximum geometry dimension used to construct a complex
+        max_edge_length - the maximum edge length used to construct a Rips complex
     Return
         PD - the persistence diagram (as a numpy array of dimension 2) of X
     '''
@@ -21,7 +22,11 @@ def computePD(X, min_persistence=0, max_dimension=2):
     assert len(X.shape) == 2, 'Input should be shaped as NxD'
 
     dm = distance_matrix(X, X)
-    st = gudhi.RipsComplex(distance_matrix=dm).create_simplex_tree(max_dimension=max_dimension)
+    if max_edge_length:
+        assert max_edge_length>0, 'Invalid max_edge_length.'
+        st = gudhi.RipsComplex(distance_matrix=dm, max_edge_length=max_edge_length).create_simplex_tree(max_dimension=max_dimension)
+    else:
+        st = gudhi.RipsComplex(distance_matrix=dm).create_simplex_tree(max_dimension=max_dimension)
     st.compute_persistence(homology_coeff_field=2, min_persistence=min_persistence, persistence_dim_max=False)
     PD = st.persistence_intervals_in_dimension(0)
     if max_dimension > 1:
@@ -29,6 +34,21 @@ def computePD(X, min_persistence=0, max_dimension=2):
             PD = np.vstack((PD, st.persistence_intervals_in_dimension(1)))
     #PD = st.persistence(homology_coeff_field=2, min_persistence=0, persistence_dim_max=False)
     return PD
+
+def totalPersistence(PD, OnlyZero=False):
+    '''
+    Input
+        PD - The persistence diagram (as a numpy array of dimension 2) used for computation. 
+        OnlyZero - Only calculate the zero dimension total persistence. Will output total 
+                    persistence for all structures if set False.
+    Return
+        P - total persistence value, excluding infinity values
+    '''
+    if OnlyZero:
+        PD = PD[PD[:,0]==0]
+    P = np.sum([p[1]-p[0] for p in PD if p[1]!=np.inf])
+    return P
+
 
 def distance(PD1, PD2, metric='Wasserstein'):
     '''
@@ -83,20 +103,27 @@ if __name__ == '__main__':
     print(PDY.shape)
 
     '''Compute distance between PDs'''
-    metrics = ['Wasserstein', 'Bottleneck'] # Choose a metric
-    d = distance(PDX, PDY, metric=metrics[0])
-    print(d)
+    # metrics = ['Wasserstein', 'Bottleneck'] # Choose a metric
+    # d = distance(PDX, PDY, metric=metrics[0])
+    # print(d)
 
     '''Plot PD if needed'''
-    plotPD(PDX)
+    #plotPD(PDX)
 
     '''
     If intend to compare PDX and PDY qualitively, the same scale of y-axis is recommended.
     It is achieved by setting the MAX_DEATH as the maximum death time (except infinit) in two PDs.
     The scale of x-axis can be set inside plotPD() function by ax.set_xlim() if needed.
     '''
-    MAX_DEATH = max([x[1] for x in np.vstack((PDX, PDY)) if x[1]!=np.inf])
-    plotPD(PDX, MAX_DEATH=MAX_DEATH, filename='dgmX.png')
-    plotPD(PDY, MAX_DEATH=MAX_DEATH, filename='dgmY.png')
+    #MAX_DEATH = max([x[1] for x in np.vstack((PDX, PDY)) if x[1]!=np.inf])
+    #plotPD(PDX, MAX_DEATH=MAX_DEATH, filename='dgmX.png')
+    #plotPD(PDY, MAX_DEATH=MAX_DEATH, filename='dgmY.png')
+
+    '''
+    Calculate total persistence
+    '''
+    P_0 = totalPersistence(PDX, OnlyZero=True) # Toatal 0-dimension persistence
+    P = totalPersistence(PDX) # Total persistence
+    print(P_0, P)
 
 
