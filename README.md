@@ -8,7 +8,8 @@
 
 * Usage
 
-    There are three Functions in ComputePD.py. Detailed usage is in function definition.
+    There are four Functions in ComputePD.py. Detailed usage is in function definition.
     1. computePD - compute persistence diagram (represented as a 2D numpy array) from a point cloud
     2. plotPD - plot persistence diagram
     3. distance - compute distance between two diagrams
+    4. totalPersistence - compute the total persistence of structures
