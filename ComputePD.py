@@ -35,18 +35,23 @@ def computePD(X, min_persistence=0, max_dimension=2, max_edge_length=None):
     #PD = st.persistence(homology_coeff_field=2, min_persistence=0, persistence_dim_max=False)
     return PD
 
-def totalPersistence(PD, OnlyZero=False):
+def totalPersistence(PD, dimension='zero'):
     '''
     Input
         PD - The persistence diagram (as a numpy array of dimension 2) used for computation. 
-        OnlyZero - Only calculate the zero dimension total persistence. Will output total 
-                    persistence for all structures if set False.
+        dimension - The dimension of structures. Only this dimension will be considerer for computing.
+                    All dimension will be considered if value is 'all'. Choices = ['zero', 'one', 'all']
     Return
         P - total persistence value, excluding infinity values
     '''
-    if OnlyZero:
-        PD = PD[PD[:,0]==0]
-    P = np.sum([p[1]-p[0] for p in PD if p[1]!=np.inf])
+    if dimension == 'zero':
+        P = np.sum([p[1]-p[0] for p in PD if (p[1]!=np.inf and p[0]==0)])
+    elif dimension == 'one':
+        P = np.sum([p[1]-p[0] for p in PD if (p[1]!=np.inf and p[0]!=0)])
+    elif dimension == 'all':
+        P = np.sum([p[1]-p[0] for p in PD if p[1]!=np.inf])
+    else:
+        raise AttributeError('diemnsion \'{:}\' not supported.'.format(diemnsion))
     return P
 
 
@@ -122,8 +127,9 @@ if __name__ == '__main__':
     '''
     Calculate total persistence
     '''
-    P_0 = totalPersistence(PDX, OnlyZero=True) # Toatal 0-dimension persistence
-    P = totalPersistence(PDX) # Total persistence
-    print(P_0, P)
+    P_0 = totalPersistence(PDX, dimension='zero') # Total 0-dimension persistence
+    P_1 = totalPersistence(PDX, dimension='one') # Total 1-dimension persistence
+    P = totalPersistence(PDX, dimension='all') # Total persistence
+    print(P_0, P_1, P)
 
 
