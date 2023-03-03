@@ -31,8 +31,7 @@ def computePD(X, min_persistence=0, max_dimension=2, max_edge_length=None):
     PD = st.persistence_intervals_in_dimension(0)
     if max_dimension > 1:
         for d in range(1, max_dimension):
-            PD = np.vstack((PD, st.persistence_intervals_in_dimension(1)))
-    #PD = st.persistence(homology_coeff_field=2, min_persistence=0, persistence_dim_max=False)
+            PD = np.vstack((PD, st.persistence_intervals_in_dimension(d)))
     return PD
 
 def totalPersistence(PD, dimension='zero'):
@@ -55,17 +54,24 @@ def totalPersistence(PD, dimension='zero'):
     return P
 
 
-def distance(PD1, PD2, metric='Wasserstein'):
+def distance(PD1, PD2, metric='Wasserstein', order=1.0, dimension=0):
     '''
     Input
         PD1, PD2 - two persistence diagrams returned by computePD() function
         metric -  the metric used to compute distance between two PDs. Choices = {'Wasserstein', 'Bottleneck'}
+        order - the order of Wasserstein distance. Only useful when metric='Warsserstein'
+        dimension - Choose which dimension to compute the distance. Currently only support for 0 and 1
     Return
         distance between PD1 and PD2 under 'metric'
     '''
-
+    if dimension == 0:
+        PD1, PD2 = PD1[PD1[:,0]==0], PD2[PD2[:,0]==0]
+    elif dimension == 1:
+        PD1, PD2 = PD1[PD1[:,0]!=0], PD2[PD2[:,0]!=0]
+    else:
+        raise AttributeError('Unsupported dimension.')
     if metric == 'Wasserstein':
-        distance = gudhi.wasserstein.wasserstein_distance(PD1, PD2)
+        distance = gudhi.wasserstein.wasserstein_distance(PD1, PD2, order=order)
     elif metric == 'Bottleneck':
         distance = gudhi.bottleneck_distance(PD1, PD2)
     else:
@@ -108,9 +114,9 @@ if __name__ == '__main__':
     print(PDY.shape)
 
     '''Compute distance between PDs'''
-    # metrics = ['Wasserstein', 'Bottleneck'] # Choose a metric
-    # d = distance(PDX, PDY, metric=metrics[0])
-    # print(d)
+    metrics = ['Wasserstein', 'Bottleneck'] # Choose a metric
+    d = distance(PDX, PDY, metric=metrics[0], order=2.0, dimension=0)
+    print(d)
 
     '''Plot PD if needed'''
     #plotPD(PDX)
@@ -127,9 +133,9 @@ if __name__ == '__main__':
     '''
     Calculate total persistence
     '''
-    P_0 = totalPersistence(PDX, dimension='zero') # Total 0-dimension persistence
-    P_1 = totalPersistence(PDX, dimension='one') # Total 1-dimension persistence
-    P = totalPersistence(PDX, dimension='all') # Total persistence
-    print(P_0, P_1, P)
+    # P_0 = totalPersistence(PDX, dimension='zero') # Total 0-dimension persistence
+    # P_1 = totalPersistence(PDX, dimension='one') # Total 1-dimension persistence
+    # P = totalPersistence(PDX, dimension='all') # Total persistence
+    # print(P_0, P_1, P)
 
 
