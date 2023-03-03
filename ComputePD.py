@@ -54,29 +54,34 @@ def totalPersistence(PD, dimension='zero'):
     return P
 
 
-def distance(PD1, PD2, metric='Wasserstein', order=1.0, dimension=0):
+def distance(PD1, PD2, metric='Wasserstein', order=1.0, max_dimension=2):
     '''
     Input
         PD1, PD2 - two persistence diagrams returned by computePD() function
         metric -  the metric used to compute distance between two PDs. Choices = {'Wasserstein', 'Bottleneck'}
         order - the order of Wasserstein distance. Only useful when metric='Warsserstein'
-        dimension - Choose which dimension to compute the distance. Currently only support for 0 and 1
+        max_dimension - the maximum geometry dimension used to construct a complex. 
+                        Currently only support 2.
     Return
-        distance between PD1 and PD2 under 'metric'
+        distance between PD1 and PD2 under 'metric', in a form as 
+        [distance_0_dimension, distance_1_dimension, ..., distance_d_dimension, total_distance]
     '''
-    if dimension == 0:
-        PD1, PD2 = PD1[PD1[:,0]==0], PD2[PD2[:,0]==0]
-    elif dimension == 1:
-        PD1, PD2 = PD1[PD1[:,0]!=0], PD2[PD2[:,0]!=0]
-    else:
-        raise AttributeError('Unsupported dimension.')
-    if metric == 'Wasserstein':
-        distance = gudhi.wasserstein.wasserstein_distance(PD1, PD2, order=order)
-    elif metric == 'Bottleneck':
-        distance = gudhi.bottleneck_distance(PD1, PD2)
-    else:
-        raise AttributeError('metric \'{:}\' not supported.'.format(metric))
-    return distance
+    assert max_dimension == 2, 'max_dimension not supported.'
+    distances = []
+    for dimension in range(max_dimension):
+        if dimension == 0:
+            PD1, PD2 = PD1[PD1[:,0]==0], PD2[PD2[:,0]==0]
+        elif dimension == 1:
+            PD1, PD2 = PD1[PD1[:,0]!=0], PD2[PD2[:,0]!=0]
+        if metric == 'Wasserstein':
+            distance = gudhi.wasserstein.wasserstein_distance(PD1, PD2, order=order)
+        elif metric == 'Bottleneck':
+            distance = gudhi.bottleneck_distance(PD1, PD2)
+        else:
+            raise AttributeError('metric \'{:}\' not supported.'.format(metric))
+        distances.append(distance)
+    distances.append(np.sum(distances))
+    return distances
 
 def plotPD(PD, MAX_DEATH=None, root='./', filename='dgm.png', tilte='Persistence Diagram'):
     '''
@@ -115,7 +120,7 @@ if __name__ == '__main__':
 
     '''Compute distance between PDs'''
     metrics = ['Wasserstein', 'Bottleneck'] # Choose a metric
-    d = distance(PDX, PDY, metric=metrics[0], order=2.0, dimension=0)
+    d = distance(PDX, PDY, metric=metrics[0], order=2.0)
     print(d)
 
     '''Plot PD if needed'''
