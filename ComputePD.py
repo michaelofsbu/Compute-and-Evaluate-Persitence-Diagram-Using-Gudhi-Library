@@ -70,13 +70,13 @@ def distance(PD1, PD2, metric='Wasserstein', order=1.0, max_dimension=2):
     distances = []
     for dimension in range(max_dimension):
         if dimension == 0:
-            PD1, PD2 = PD1[PD1[:,0]==0], PD2[PD2[:,0]==0]
+            pd1, pd2 = PD1[PD1[:,0]==0], PD2[PD2[:,0]==0]
         elif dimension == 1:
-            PD1, PD2 = PD1[PD1[:,0]!=0], PD2[PD2[:,0]!=0]
+            pd1, pd2 = PD1[PD1[:,0]!=0], PD2[PD2[:,0]!=0]
         if metric == 'Wasserstein':
-            distance = gudhi.wasserstein.wasserstein_distance(PD1, PD2, order=order)
+            distance = gudhi.wasserstein.wasserstein_distance(pd1, pd2, order=order)
         elif metric == 'Bottleneck':
-            distance = gudhi.bottleneck_distance(PD1, PD2)
+            distance = gudhi.bottleneck_distance(pd1, pd2)
         else:
             raise AttributeError('metric \'{:}\' not supported.'.format(metric))
         distances.append(distance)
